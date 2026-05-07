@@ -1,0 +1,55 @@
+groups:
+  - name: ecommerce_alerts
+    rules:
+      # 1. HighErrorRate — error rate > 5% for 2m
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_errors_total[2m])) by (endpoint) 
+          / 
+          sum(rate(http_requests_total[2m])) by (endpoint) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Error Rate on {{ $labels.endpoint }}"
+          description: "Endpoint {{ $labels.endpoint }} has an error rate of {{ $value | humanizePercentage }}."
+
+      # 2. HighLatencyP95 — p95 latency > 1s for 5m
+      - alert: HighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P95 Latency on {{ $labels.endpoint }}"
+          description: "P95 latency is {{ $value }}s on {{ $labels.endpoint }}."
+
+      # 3. APIDown — up == 0 for 1m
+      - alert: APIDown
+        expr: up{job="api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API is down"
+          description: "The FastAPI application service is unreachable."
+
+      # 4. HighActiveRequests — active_requests > 50
+      - alert: HighActiveRequests
+        expr: sum(http_active_requests) > 50
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Active Requests"
+          description: "Total active requests is currently {{ $value }}."
+
+      # 5. SlowDBQueries — db p99 > 500ms for 3m
+      - alert: SlowDBQueries
+        expr: histogram_quantile(0.99, sum(rate(db_query_duration_seconds_bucket[3m])) by (le, table, operation)) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow DB Queries on {{ $labels.table }}"
+          description: "P99 latency for {{ $labels.operation }} on {{ $labels.table }} is {{ $value }}s."

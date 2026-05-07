@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Our main FastAPI application
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    healthcheck:
+      # Tells Docker (and Prometheus) when the app is actually ready to handle traffic
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # The database for all our metrics and alerts
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/console_templates'
+    ports:
+      - "9090:9090"
+
+  # The dashboard UI - Login with admin/admin
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      # This auto-links Prometheus as a datasource so you don't have to do it manually
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+
+  # Collects hardware metrics (CPU, RAM, Disk) from the host machine
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"

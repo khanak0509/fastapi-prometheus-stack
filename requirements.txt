@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+prometheus-client
+httpx
+python-multipart
+pydantic>=2.0.0
+email-validator
