@@ -69,10 +69,8 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
             HTTP_ACTIVE_REQUESTS.labels(method=method, endpoint=normalized_endpoint).dec()
 
     def normalize_path(self, path: str) -> str:
-        """
-        Regex magic to keep our Prometheus cardinality low.
-        Replaces specific IDs with generic placeholders.
-        """
+        # Regex magic to keep our Prometheus cardinality low.
+        # Replaces specific IDs with generic placeholders.
         path = re.sub(r"/users/[^/]+", "/users/{user_id}", path)
         path = re.sub(r"/orders/[^/]+", "/orders/{order_id}", path)
         path = re.sub(r"/products/[^/]+", "/products/{id}", path)

@@ -6,10 +6,6 @@ from app.metrics import DB_QUERIES_TOTAL, DB_QUERY_DURATION_SECONDS
 
 @asynccontextmanager
 async def track_db_query(operation: str, table: str):
-    """
-    Wraps DB calls to automatically log metrics to Prometheus.
-    Usage: async with track_db_query("select", "users"): ...
-    """
     start_time = time.perf_counter()
     status = "success"
     
@@ -38,10 +34,10 @@ DATABASE = {
 }
 
 async def simulate_db_work(min_time=0.002, max_time=0.02):
-    """Adds some fake latency to make the graphs look realistic"""
+    # Adds some fake latency to make the graphs look realistic
     await asyncio.sleep(random.uniform(min_time, max_time))
 
 def simulate_write_error(probability=0.075):
-    """Occasionally throws a wrench in the gears to test our error alerts"""
+    # Occasionally throws a wrench in the gears to test our error alerts
     if random.random() < probability:
         raise Exception("Database write failure (simulated)")
